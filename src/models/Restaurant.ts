@@ -1,84 +1,95 @@
-import Pizza from "./pizza";
+import e from "express";
+import Pizza from "./Pizza";
 class Restaurant {
-
-   
   private orders: Pizza[] = [];
   private doughQueue: Pizza[] = [];
   private toppingQueue: Pizza[] = [];
   private ovenQueue: Pizza[] = [];
   private serveQueue: Pizza[] = [];
-  private count:number = 0;
 
   constructor(orders: Pizza[]) {
     this.orders = orders;
   }
 
+  private doughChefs: number = 0;
+  private toppingChefs: number = 0;
+  private oven: number = 0;
+  private waiters: number = 0;
 
-  private doughChefs: number = 2;
-  private toppingChefs: number = 3;
-  private oven: number = 1;
-  private waiters: number = 2;
-
-  setOrders(orders:Pizza[]){
-        this.orders = orders;
-        this.startOrders();
+  setOrders(orders: Pizza[]) {
+    //orders.forEach(order => this.orders.push(order))
+    this.orders = orders;
+    this.startOrders();
   }
 
 
-  private async DoughPizza(){
-    
-    console.log("start dough pizza" + (this.doughQueue[this.doughQueue.length-1]).num + ": " + Date.now());
+  private DoughPizza(pizza: Pizza) {
+    this.doughChefs++;
+    console.log("start dough pizza: " + pizza.index + ": " + Date.now());
     setTimeout(() => {
-      console.log("end dough pizza: "  + (this.doughQueue[this.doughQueue.length-1]).num + ": "+ Date.now());
-      this.toppingQueue.push( this.doughQueue.pop()!)
+      console.log("end dough pizza: " + pizza.index + ": " + Date.now());
+      this.toppingQueue.push(pizza);
+      this.doughChefs--;
       this.startOrders();
     }, 7000);
+    this.startOrders();
   }
 
-  private async ToppingPizza() {
-    console.log("start topping pizza: " +(this.toppingQueue[this.toppingQueue.length-1]).num + ": " + Date.now());
+  private ToppingPizza(pizza: Pizza) {
+    this.toppingChefs++;
+    console.log("start topping pizza: " + pizza.index + ": " + Date.now());
     setTimeout(() => {
-      console.log("end topping done! "  + (this.toppingQueue[this.toppingQueue.length-1]).num + ": " +Date.now());
-      this.ovenQueue.push(  this.toppingQueue.pop()!)
+      console.log("end topping done!  " + pizza.index + ": " + Date.now());
+      pizza.HandleTopings();
+      this.ovenQueue.push(pizza);
+      this.toppingChefs--;
       this.startOrders();
     }, 4000);
+    this.startOrders();
   }
-
-//   private async Oven() {
-//     console.log("start oven pizza: " + (this.count++) + ": " + Date.now());
-//     setTimeout(() => {
-//       console.log("end oven done! " + (this.count++) + ": " + Date.now());
-//       this.serveQueue.push(this.ovenQueue.pop()!);
-//       this.startOrders();
-//     }, 10000);
-//   }
-//   private async Serve() {
-//     console.log("start serve pizza: " + (this.count++) + ": " + Date.now());
-//     setTimeout(() => {
-//       console.log("end serve done! " + (this.count++) + ": " + Date.now());
-//       this.serveQueue.pop()
-//       this.startOrders();
-//     }, 5000);
-  //}
-
-  async startOrders() {
-    console.log("boo")
-      while(this.doughQueue.length < 2 && this.orders.length != 0) {      
-          this.doughQueue.push(this.orders.pop()!)
-          await this.DoughPizza();
+  private OvenPizza(pizza: Pizza) {
+    this.oven++;
+    console.log("start oven pizza: " + pizza.index + ": " + Date.now());
+    setTimeout(() => {
+      console.log("end oven done! " + pizza.index + ": " + Date.now());
+      this.serveQueue.push(pizza);
+      this.oven--;
+      this.startOrders();
+    }, 10000);
+    this.startOrders();
+  }
+  private Serve(pizza: Pizza) {
+    this.waiters++;
+    console.log("start serve pizza: " + pizza.index + ": " + Date.now());
+    setTimeout(() => {
+      console.log("end serve done! " + pizza.index + ": " + Date.now());
+      this.waiters--;
+      this.startOrders();
+    }, 5000);
+    this.startOrders();
+  }
+  startOrders() {
+    if (
+      this.orders.length > 0 ||
+      this.doughQueue.length > 0 ||
+      this.toppingQueue.length > 0 ||
+      this.ovenQueue.length > 0 ||
+      this.serveQueue.length > 0
+    ) {
+      if (this.orders.length > 0) {
+        this.doughQueue.push(this.orders.pop()!);
       }
-      if (this.toppingQueue.length < 3 && this.toppingQueue.length > 0) {
-          await this.ToppingPizza()
+      if (this.doughChefs < 2 && this.doughQueue.length > 0) {
+        this.DoughPizza(this.doughQueue.splice(0, 1)[0]!);
+      } else if (this.toppingChefs < 3 && this.toppingQueue.length > 0) {
+        this.ToppingPizza(this.toppingQueue.splice(0, 1)[0]!);
+      } else if (this.oven < 1 && this.ovenQueue.length > 0) {
+        this.OvenPizza(this.ovenQueue.splice(0, 1)[0]!);
+      } else if (this.waiters < 2 && this.serveQueue.length > 0) {
+        this.Serve(this.serveQueue.splice(0, 1)[0]!);
       }
-    //   if (this.ovenQueue.length == 1) {
-    //       await this.Oven()
-    //   }
-    //   if (this.serveQueue.length < 2 && this.serveQueue.length > 0) {
-    //       await this.Serve()
-    //   }
-      console.log(this.toppingQueue.length)
-    
-    console.log("end")
+    }
   }
 }
-export default Restaurant
+
+export default Restaurant;
