@@ -7,6 +7,8 @@ const router: Router = express.Router();
 
 const restaurant:Restaurant = new Restaurant([]);
 
+
+//strart working by get the api
 router.get("/",  (req: Request, res: Response) => {
     const list:Pizza[] = [];
     for(let i = 0 ; i < 5 ; i++){
@@ -14,6 +16,6 @@ router.get("/",  (req: Request, res: Response) => {
         list.push(p)
     }
     restaurant.setOrders(list);
-  res.send("hello");
+  res.send("refresh!!");
 });
 module.exports = router;
